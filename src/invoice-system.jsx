@@ -163,18 +163,18 @@ function Modal({ children, onClose, maxWidth = 520 }) {
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 function Dashboard({ settings, clients, invoices, onNewInvoice, onViewInvoice }) {
-  const paid = invoices.filter(i => i.status === "paid");
-  const unpaid = invoices.filter(i => i.status === "unpaid");
-  const draft = invoices.filter(i => i.status === "draft");
+  const paid = (invoices && invoices.filter(i => i.status === "paid")) || [];
+  const unpaid = (invoices && invoices.filter(i => i.status === "unpaid")) || [];
+  const draft = (invoices && invoices.filter(i => i.status === "draft")) || [];
   const revenue = paid.reduce((s, i) => s + calcTotals(i).total, 0);
   const pending = unpaid.reduce((s, i) => s + calcTotals(i).total, 0);
   const cur = (settings && settings.defaultCurrency) || "NGN";
-  const recent = [...invoices].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 6);
+  const recent = invoices ? [...invoices].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 6) : [];
 
   const stats = [
     { label: "Total Revenue", val: fmtMoney(revenue, cur), sub: `${paid.length} paid invoice${paid.length !== 1 ? "s" : ""}`, accent: "#059669", icon: "💰" },
     { label: "Outstanding", val: fmtMoney(pending, cur), sub: `${unpaid.length} awaiting payment`, accent: "#D97706", icon: "⏳" },
-    { label: "Total Invoices", val: invoices.length, sub: `${draft.length} draft${draft.length !== 1 ? "s" : ""}`, accent: "#3B82F6", icon: "📄" },
+    { label: "Total Invoices", val: (invoices && invoices.length) || 0, sub: `${draft.length} draft${draft.length !== 1 ? "s" : ""}`, accent: "#3B82F6", icon: "📄" },
     { label: "Clients", val: clients.length, sub: "registered clients", accent: "#7C3AED", icon: "👥" },
   ];
 
@@ -261,7 +261,7 @@ function InvoiceList({ invoices, clients, onView, onDelete, onMarkPaid, onNew, o
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#0D1B2A", marginBottom: 2 }}>Invoices</h1>
-          <p style={{ fontSize: 14, color: "#9CA3AF" }}>{invoices.length} total invoice{invoices.length !== 1 ? "s" : ""}</p>
+          <p style={{ fontSize: 14, color: "#9CA3AF" }}>{(invoices && invoices.length) || 0} total invoice{(invoices && invoices.length !== 1) ? "s" : ""}</p>
         </div>
         <Btn onClick={onNew}>+ New Invoice</Btn>
       </div>
@@ -633,7 +633,7 @@ function ClientsPage({ clients, invoices, onAdd, onEdit, onDelete }) {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {clients.map(c => {
-            const clientInvs = invoices.filter(i => i.clientId === c.id);
+            const clientInvs = (invoices && invoices.filter(i => i.clientId === c.id)) || [];
             const revenue = clientInvs.filter(i => i.status === "paid").reduce((s, i) => s + calcTotals(i).total, 0);
             const initials = c.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
             return (
@@ -845,7 +845,7 @@ export default function App() {
   function startNew() {
     setInvoiceForm({
       id: genId(),
-      number: `INV-${String(invoices.length + 1).padStart(4, "0")}`,
+      number: `INV-${String((invoices && invoices.length) + 1).padStart(4, "0")}`,
       clientId: "", date: todayStr(), dueDate: "",
       currency: (settings && settings.defaultCurrency) || "NGN",
       taxRate: (settings && settings.defaultTaxRate) || "7.5",
@@ -942,7 +942,7 @@ export default function App() {
                 }}>
                   <span style={{ fontSize: 16 }}>{n.icon}</span>
                   {n.label}
-                  {n.id === "invoices" && invoices.filter(i => i.status === "unpaid").length > 0 && (
+                  {n.id === "invoices" && invoices && invoices.filter(i => i.status === "unpaid").length > 0 && (
                     <span style={{ marginLeft: "auto", background: "#C9841A", color: "#fff", borderRadius: 12, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>
                       {invoices.filter(i => i.status === "unpaid").length}
                     </span>
