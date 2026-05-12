@@ -175,7 +175,7 @@ function Dashboard({ settings, clients, invoices, onNewInvoice, onViewInvoice })
     { label: "Total Revenue", val: fmtMoney(revenue, cur), sub: `${paid.length} paid invoice${paid.length !== 1 ? "s" : ""}`, accent: "#059669", icon: "💰" },
     { label: "Outstanding", val: fmtMoney(pending, cur), sub: `${unpaid.length} awaiting payment`, accent: "#D97706", icon: "⏳" },
     { label: "Total Invoices", val: (invoices && invoices.length) || 0, sub: `${draft.length} draft${draft.length !== 1 ? "s" : ""}`, accent: "#3B82F6", icon: "📄" },
-    { label: "Clients", val: clients.length, sub: "registered clients", accent: "#7C3AED", icon: "👥" },
+    { label: "Clients", val: (clients && clients.length) || 0, sub: "registered clients", accent: "#7C3AED", icon: "👥" },
   ];
 
   return (
@@ -215,7 +215,7 @@ function Dashboard({ settings, clients, invoices, onNewInvoice, onViewInvoice })
               </thead>
               <tbody>
                 {recent.map(inv => {
-                  const cl = clients.find(c => c.id === inv.clientId);
+                  const cl = clients && clients.find(c => c.id === inv.clientId);
                   const { total } = calcTotals(inv);
                   return (
                     <tr key={inv.id} className="hover-row" style={{ borderTop: "1px solid #F3F0EA", cursor: "pointer" }} onClick={() => onViewInvoice(inv)}>
@@ -248,7 +248,7 @@ function InvoiceList({ invoices, clients, onView, onDelete, onMarkPaid, onNew, o
     .filter(i => filter === "all" || i.status === filter)
     .filter(i => {
       if (!search) return true;
-      const cl = clients.find(c => c.id === i.clientId);
+      const cl = clients && clients.find(c => c.id === i.clientId);
       return (
         (i.number || "").toLowerCase().includes(search.toLowerCase()) ||
         (cl?.name || "").toLowerCase().includes(search.toLowerCase())
@@ -296,7 +296,7 @@ function InvoiceList({ invoices, clients, onView, onDelete, onMarkPaid, onNew, o
               </thead>
               <tbody>
                 {filtered.map(inv => {
-                  const cl = clients.find(c => c.id === inv.clientId);
+                  const cl = clients && clients.find(c => c.id === inv.clientId);
                   const { total } = calcTotals(inv);
                   return (
                     <tr key={inv.id} className="hover-row" style={{ borderTop: "1px solid #F3F0EA" }}>
@@ -361,7 +361,7 @@ function CreateInvoice({ form, setForm, clients, onSave, onCancel }) {
             <FormRow label="Client">
               <select value={form.clientId} onChange={e => setField("clientId", e.target.value)}>
                 <option value="">— Select client —</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {(clients && clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)) || []}
               </select>
             </FormRow>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -468,7 +468,7 @@ function CreateInvoice({ form, setForm, clients, onSave, onCancel }) {
 
 // ── View Invoice ─────────────────────────────────────────────────────────────
 function ViewInvoice({ invoice, clients, settings, onClose, onMarkPaid, onDelete }) {
-  const cl = clients.find(c => c.id === invoice.clientId);
+  const cl = clients && clients.find(c => c.id === invoice.clientId);
   const { subtotal, taxAmt, total } = calcTotals(invoice);
 
   return (
@@ -623,16 +623,16 @@ function ClientsPage({ clients, invoices, onAdd, onEdit, onDelete }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#0D1B2A", marginBottom: 2 }}>Clients</h1>
-          <p style={{ fontSize: 14, color: "#9CA3AF" }}>{clients.length} client{clients.length !== 1 ? "s" : ""} registered</p>
+          <p style={{ fontSize: 14, color: "#9CA3AF" }}>{(clients && clients.length) || 0} client{(clients && clients.length !== 1) ? "s" : ""} registered</p>
         </div>
         <Btn onClick={onAdd}>+ Add Client</Btn>
       </div>
 
-      {clients.length === 0 ? (
+      {(clients && clients.length === 0) ? (
         <Section><EmptyState icon="👥" title="No clients yet" sub="Add your first client to get started" action={<Btn onClick={onAdd}>Add Client</Btn>} /></Section>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {clients.map(c => {
+          {(clients && clients.map(c => {
             const clientInvs = (invoices && invoices.filter(i => i.clientId === c.id)) || [];
             const revenue = clientInvs.filter(i => i.status === "paid").reduce((s, i) => s + calcTotals(i).total, 0);
             const initials = c.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
@@ -659,7 +659,7 @@ function ClientsPage({ clients, invoices, onAdd, onEdit, onDelete }) {
                 </div>
               </div>
             );
-          })}
+          })) || []}
         </div>
       )}
     </div>
