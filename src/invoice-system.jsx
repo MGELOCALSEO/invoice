@@ -168,7 +168,7 @@ function Dashboard({ settings, clients, invoices, onNewInvoice, onViewInvoice })
   const draft = invoices.filter(i => i.status === "draft");
   const revenue = paid.reduce((s, i) => s + calcTotals(i).total, 0);
   const pending = unpaid.reduce((s, i) => s + calcTotals(i).total, 0);
-  const cur = settings.defaultCurrency || "NGN";
+  const cur = (settings && settings.defaultCurrency) || "NGN";
   const recent = [...invoices].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 6);
 
   const stats = [
@@ -182,7 +182,7 @@ function Dashboard({ settings, clients, invoices, onNewInvoice, onViewInvoice })
     <div style={{ animation: "slideIn .2s ease" }}>
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#0D1B2A", marginBottom: 4 }}>
-          {settings.companyName ? `Welcome back${settings.companyName ? ", " + settings.companyName : ""}` : "Dashboard"}
+          {(settings && settings.companyName) ? `Welcome back${settings.companyName ? ", " + settings.companyName : ""}` : "Dashboard"}
         </h1>
         <p style={{ fontSize: 14, color: "#9CA3AF" }}>Here's what's happening with your business today.</p>
       </div>
@@ -493,12 +493,12 @@ function ViewInvoice({ invoice, clients, settings, onClose, onMarkPaid, onDelete
         <div style={{ background: "#0D1B2A", padding: "36px 40px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 30, color: "#C9841A", marginBottom: 8 }}>
-              {settings.companyName || "Your Company"}
+              {(settings && settings.companyName) || "Your Company"}
             </div>
             <div style={{ fontSize: 13, color: "#8A9BAB", lineHeight: 1.8 }}>
-              {settings.companyAddress && <div>{settings.companyAddress}</div>}
-              {settings.companyEmail && <div>{settings.companyEmail}</div>}
-              {settings.companyPhone && <div>{settings.companyPhone}</div>}
+              {(settings && settings.companyAddress) && <div>{settings.companyAddress}</div>}
+              {(settings && settings.companyEmail) && <div>{settings.companyEmail}</div>}
+              {(settings && settings.companyPhone) && <div>{settings.companyPhone}</div>}
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
@@ -591,14 +591,14 @@ function ViewInvoice({ invoice, clients, settings, onClose, onMarkPaid, onDelete
         </div>
 
         {/* Bank Details Footer */}
-        {(settings.bankAccountName || settings.bankAccountNumber || settings.bankName) && (
+        {(settings && (settings.bankAccountName || settings.bankAccountNumber || settings.bankName)) && (
           <div style={{ background: "#F7F5F0", borderTop: "1px solid #E8E5DF", padding: "24px 40px", marginTop: 0 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 14 }}>Payment Details</div>
             <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
               {[
-                { label: "Account Name", val: settings.bankAccountName },
-                { label: "Account Number", val: settings.bankAccountNumber },
-                { label: "Bank Name", val: settings.bankName },
+                { label: "Account Name", val: settings && settings.bankAccountName },
+                { label: "Account Number", val: settings && settings.bankAccountNumber },
+                { label: "Bank Name", val: settings && settings.bankName },
               ].filter(f => f.val).map(f => (
                 <div key={f.label}>
                   <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 3 }}>{f.label}</div>
@@ -814,7 +814,14 @@ export default function App() {
           window.storage.get("inv2_clients"),
           window.storage.get("inv2_invoices"),
         ]);
-        if (results[0].status === "fulfilled" && results[0].value) setSettings(JSON.parse(results[0].value.value));
+        if (results[0].status === "fulfilled" && results[0].value && results[0].value.value) {
+          try {
+            const parsedSettings = JSON.parse(results[0].value.value);
+            setSettings(parsedSettings);
+          } catch (e) {
+            setSettings(DEF_SETTINGS);
+          }
+        }
         if (results[1].status === "fulfilled" && results[1].value) setClients(JSON.parse(results[1].value.value));
         if (results[2].status === "fulfilled" && results[2].value) setInvoices(JSON.parse(results[2].value.value));
       } catch {}
@@ -840,8 +847,8 @@ export default function App() {
       id: genId(),
       number: `INV-${String(invoices.length + 1).padStart(4, "0")}`,
       clientId: "", date: todayStr(), dueDate: "",
-      currency: settings.defaultCurrency || "NGN",
-      taxRate: settings.defaultTaxRate || "7.5",
+      currency: (settings && settings.defaultCurrency) || "NGN",
+      taxRate: (settings && settings.defaultTaxRate) || "7.5",
       items: [{ id: genId(), description: "", qty: "1", price: "" }],
       notes: "", status: "draft",
     });
@@ -914,7 +921,7 @@ export default function App() {
           {/* Brand */}
           <div style={{ padding: "28px 22px 22px" }}>
             <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#C9841A", marginBottom: 4 }}>InvoiceOS</div>
-            {settings.companyName && (
+            {settings && settings.companyName && (
               <div style={{ fontSize: 12, color: "#4A6582", lineHeight: 1.4 }}>{settings.companyName}</div>
             )}
           </div>
