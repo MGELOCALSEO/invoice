@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from '../invoice-system.jsx';
+import App from './invoice-system.jsx';
 
 // Storage polyfill for window.storage API
 if (!window.storage) {

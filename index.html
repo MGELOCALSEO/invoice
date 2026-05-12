@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>InvoiceOS - Invoice Management System</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        #root {
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Storage polyfill -->
+    <script>
+        if (!window.storage) {
+            window.storage = {
+                async get(key) {
+                    return new Promise((resolve) => {
+                        const value = localStorage.getItem(key);
+                        resolve({ value });
+                    });
+                },
+                async set(key, value) {
+                    return new Promise((resolve, reject) => {
+                        try {
+                            localStorage.setItem(key, value);
+                            resolve();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                }
+            };
+        }
+    </script>
+
+    <!-- Load invoice system -->
+    <script type="text/babel" src="./invoice-system.jsx"></script>
+    
+    <script type="text/babel">
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(
+            React.createElement(React.StrictMode, null, 
+                React.createElement(App)
+            )
+        );
+    </script>
+</body>
+</html>
