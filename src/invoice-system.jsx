@@ -244,7 +244,7 @@ function InvoiceList({ invoices, clients, onView, onDelete, onMarkPaid, onNew, o
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  const filtered = invoices
+  const filtered = (invoices || [])
     .filter(i => filter === "all" || i.status === filter)
     .filter(i => {
       if (!search) return true;
@@ -858,9 +858,10 @@ export default function App() {
   function saveInvoice(inv, status) {
     const data = { ...inv, status };
     setInvoices(prev => {
-      const idx = prev.findIndex(i => i.id === inv.id);
-      if (idx >= 0) { const a = [...prev]; a[idx] = data; return a; }
-      return [...prev, data];
+      const prevArray = prev || [];
+      const idx = prevArray.findIndex(i => i.id === inv.id);
+      if (idx >= 0) { const a = [...prevArray]; a[idx] = data; return a; }
+      return [...prevArray, data];
     });
     notify(status === "unpaid" ? "Invoice issued successfully!" : "Saved as draft");
     setInvoiceForm(null);
@@ -868,13 +869,13 @@ export default function App() {
   }
 
   function deleteInvoice(id) {
-    setInvoices(prev => prev.filter(i => i.id !== id));
+    setInvoices(prev => (prev || []).filter(i => i.id !== id));
     notify("Invoice deleted");
     if (viewInv?.id === id) { setViewInv(null); setTab("invoices"); }
   }
 
   function markPaid(id) {
-    setInvoices(prev => prev.map(i => i.id === id ? { ...i, status: "paid" } : i));
+    setInvoices(prev => (prev || []).map(i => i.id === id ? { ...i, status: "paid" } : i));
     setViewInv(prev => prev?.id === id ? { ...prev, status: "paid" } : prev);
     notify("Invoice marked as paid ✓");
   }
@@ -882,10 +883,10 @@ export default function App() {
   // ── Client ops ──
   function saveClient(data) {
     if (data.id) {
-      setClients(prev => prev.map(c => c.id === data.id ? data : c));
+      setClients(prev => (prev || []).map(c => c.id === data.id ? data : c));
       notify("Client updated");
     } else {
-      setClients(prev => [...prev, { ...data, id: genId() }]);
+      setClients(prev => [...(prev || []), { ...data, id: genId() }]);
       notify("Client added successfully");
     }
     setClientModal(null);
